@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 IP=`wget -qO- http://hu2.hu/whatismyip.php`
 NAME=`sysctl kernel.hostname|awk '{print $3}'`
