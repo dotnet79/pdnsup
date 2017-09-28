@@ -9,5 +9,5 @@ MYSQL_HOST=127.0.0.1
 #echo $myvariable
 
 mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST powerdns -e \
-"UPDATE records SET CONTENT=\"$1\", CHANGE_DATE=\"`date +%s`\" WHERE name=\"$2\""
+"UPDATE records SET CONTENT=\"$1\", change_date=\"`date +%s`\" WHERE name=\"$2\""
 
