@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 IP=`wget -qO- http://hu2.hu/whatismyip.php`
-NAME=`hostname`
+NAME=`sysctl kernel.hostname|awk '{print $3}'`
 DOMAIN=hu2.hu
 FDOMAIN=$NAME.$DOMAIN
 USER=pdnsup
