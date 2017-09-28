@@ -1,6 +1,7 @@
 #!/bin/bash
 cd /home/pdnsup/
 TIMESTAMP=`date +%s`
+git init
 git config --global core.excludesfile ~/.git/.gitignore
 git add ~/pdns/.
 git add ~/install.sh
