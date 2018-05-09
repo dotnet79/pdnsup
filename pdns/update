@@ -1,0 +1,96 @@
+#!/bin/bash
+LOGUPDATE="/var/log/ddns_update.log"
+LOGUSE="/var/log/ddns_use.log"
+
+echo "Content-type: text/html"
+echo ""
+
+echo '<html>'
+echo '<head>'
+echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
+echo '<title>Dyn DNS service</title>'
+echo '</head>'
+echo '<body>'
+echo 'DYN DNS TEST:'
+echo '<br>'
+
+# Save the old internal field separator.
+  OIFS="$IFS"
+
+# Set the field separator to & and parse the QUERY_STRING at the ampersand.
+  IFS="${IFS}&"
+  set -- $QUERY_STRING
+  Args="$*"
+  IFS="$OIFS"
+
+if [ -z $Args ]
+  then
+      exit 0
+fi
+
+# Next parse the individual "name=value" tokens.
+
+  ARGX=""
+  ARGY=""
+  ARGZ=""
+
+  for i in $Args ;do
+
+#       Set the field separator to =
+        IFS="${OIFS}="
+        set $i
+        IFS="${OIFS}"
+        case $1 in
+                # Don't allow "/" changed to " ". Prevent hacker problems.
+                domain) ARGX="`echo $2 | sed 's|[\]||g' | sed 's|%20| |g'`"
+                       ;;
+                # Filter for "/" not applied here
+                #ip) ARGY="`echo $2 | sed 's|%20| |g'`"
+                ip) ARGY="`echo $REMOTE_ADDR`"
+                       ;;
+                #datee) ARGZ="${2/\// /}"
+                usr) ARGZ="`echo $2`"
+                       ;;
+                *)     echo "<hr>Warning:"\
+                            "<br>Unrecognized variable \'$1\' passed by FORM in QUERY_STRING.<hr>"
+                       ;;
+
+        esac
+  done
+
+
+
+if [ $ARGZ  = `echo -n $ARGX | sha256sum |cut -c8-16` ]
+  then
+   SQLSELIP=`/home/pdnsup/pdns/powerdns-select.sh $ARGX`
+   SOADOM=`echo $ARGX | cut -d '.' -f 2-`
+    if [ $ARGY != $SQLSELIP ]
+      then
+        /home/pdnsup/pdns/powerdns-dynamic.sh $ARGY $ARGX
+        /home/pdnsup/pdns/powerdns-soa.sh $SOADOM
+        echo '<br>'
+        echo "DNS frissitve"
+        echo `date +%F_%T` domain:$ARGX oldIP:$SQLSELIP newIP:$ARGY >> $LOGUPDATE
+    else
+        echo '<br>'
+        echo "DNS mar bejegyezve"
+        echo `date +%F_%T` domain:$ARGX IP:$ARGY >> $LOGUSE
+    fi
+
+else
+    exit 0
+fi
+
+  echo 'Parsed Values:' 
+  echo '<br>'
+  echo $ARGX
+  echo '<br>'
+  echo $ARGY
+  echo '<br>'
+  echo $ARGZ
+  echo '<br>'
+
+echo '</body>'
+echo '</html>'
+
+exit 0
